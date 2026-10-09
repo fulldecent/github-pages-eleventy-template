@@ -1,0 +1,13 @@
+// The Node feature cannot read .node-version, and this image pins the major only.
+// Update the image tag when .node-version moves to a new major.
+// Update the Yarn version when packageManager in package.json changes.
+{
+  "name": "Eleventy",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+  "postCreateCommand": "/bin/sh -c 'set -e; npm install -g corepack; corepack enable; corepack prepare yarn@4.18.1 --activate; yarn install --immutable'",
+  "customizations": {
+    "vscode": {
+      "extensions": ["editorconfig.editorconfig", "DavidAnson.vscode-markdownlint", "esbenp.prettier-vscode"]
+    }
+  }
+}
