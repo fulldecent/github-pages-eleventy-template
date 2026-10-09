@@ -1,0 +1,17 @@
+body {
+  margin: 2rem auto;
+  max-width: 40rem;
+  padding: 0 1rem;
+  color: #1c1917;
+  background: #fafaf9;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  line-height: 1.5;
+}
+
+a {
+  color: #1d4ed8;
+}
+
+header p {
+  margin-top: 0;
+}

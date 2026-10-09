@@ -1,0 +1,22 @@
+{
+  "--": [
+    "Notes:",
+    "",
+    "format uses npx @latest so it matches .github/workflows/lint.yml. A pinned Prettier or markdownlint would let the local write and the CI check disagree.",
+    "",
+    "yarn build writes the site at the domain root. The GitHub Actions workflow passes --pathprefix because a project site is served under /<repository>/. The prefix stays out of this file so a copied repository keeps its own name."
+  ],
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "yarn@4.18.1",
+  "scripts": {
+    "build": "eleventy",
+    "dev": "eleventy --serve",
+    "test": "node test/site.mjs",
+    "format": "npx prettier@latest --write . && npx markdownlint-cli2@latest --fix \"**/*.md\""
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "3.1.6"
+  }
+}

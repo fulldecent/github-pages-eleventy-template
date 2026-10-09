@@ -1,0 +1,88 @@
+name: Build, test, deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+# Deploy writes the GitHub Pages site. Lint stays a separate workflow.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Eleventy build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Update this when Yarn no longer recommends Corepack.
+      # See: https://yarnpkg.com/getting-started/install
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # A repository named <owner>.github.io is served at the host root.
+      # Every other repository is served at /<repository>/.
+      # A custom domain at the host root needs prefix / and a change to this line.
+      # https://www.11ty.dev/docs/config/#deploy-to-a-subdirectory-with-a-path-prefix
+      - name: Build site
+        env:
+          PATH_PREFIX: ${{ github.event.repository.name == format('{0}.github.io', github.repository_owner) && '/' || format('/{0}/', github.event.repository.name) }}
+        run: yarn eleventy --pathprefix="$PATH_PREFIX"
+
+      - name: Upload build artifact, ready for GitHub Pages deployment
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/
+      - name: Upload build artifact, ready for testing
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifact
+          path: build/
+          include-hidden-files: true
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - name: Download build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: build-artifact
+          path: build/
+      - name: Test suite
+        run: node test/site.mjs
+
+  deploy-github-pages:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    needs: [build, test]
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
